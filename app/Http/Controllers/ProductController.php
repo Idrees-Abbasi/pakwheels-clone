@@ -5,6 +5,9 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Mail\ProductAddedMail;
+use Illuminate\Support\Facades\Mail;
+
 class ProductController extends Controller
 {
     public function create()
@@ -28,19 +31,25 @@ class ProductController extends Controller
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('products', 'public');
         }
+    // ✅ Product create and save
+    $product = new Product();
+    $product->category    = $request->category;
+    $product->title       = $request->title;
+    $product->description = $request->description;
+    $product->price       = $request->price;
+    $product->image       = $imagePath; // 👈 image bhi save hogi
+    $product->seller_id   = auth()->guard('seller')->id();
+    $product->save();
 
-        // ✅ 3. Product create (seller_id ke sath)
-        Product::create([
-            'category'    => $request->category,
-            'title'       => $request->title,
-            'description' => $request->description,
-            'price'       => $request->price,
-            'image'       => $imagePath,
-            'seller_id'   => auth()->guard('seller')->id(), // yahan seller_id save hoga
-        ]);
+    // ✅ Email bhejna
+    try {
+        Mail::to("idreesabbasi006@gmail.com")->send(new ProductAddedMail($product));
+    } catch (\Exception $e) {
+        return back()->with("error", "❌ Mail failed: " . $e->getMessage());
+    }
 
-        // 4. Redirect with success message
-        return redirect()->route('welcome')->with('success', 'Product added successfully!');
+    // ✅ Redirect with success message
+    return redirect()->route('welcome')->with('success', 'Product added successfully & E-mail Sent !');
     }
 
     public function show($id)
