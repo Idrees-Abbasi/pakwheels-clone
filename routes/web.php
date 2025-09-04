@@ -11,6 +11,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Controllers\ContactRequestController;
 use App\Http\Controllers\AdminLoginController;
+use Illuminate\Support\Facades\DB;
+
+// web.php
+Route::get('/get-counts', function () {
+    $products = DB::table('products')->count();
+    $users = DB::table('users')->count();
+    $sellers = DB::table('sellers')->count();
+    $admins = DB::table('admins')->count();
+
+    return response()->json([
+        'products' => $products,
+        'users' => $users,
+        'sellers' => $sellers,
+        'admins' => $admins
+    ]);
+});
 
 
 // -------------------- Login Routes --------------------
